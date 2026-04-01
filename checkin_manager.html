@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Check-in Manager</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',sans-serif;background:#f7f6f3;color:#1a1a2e;min-height:100vh;font-size:14px}
+button,textarea,input,select{font-family:inherit}
+nav{background:linear-gradient(135deg,#1a1a2e,#2d2b55);color:white;padding:0 22px;display:flex;align-items:center;min-height:50px;gap:0}
+.logo{font-size:.9rem;font-weight:800;margin-right:22px;white-space:nowrap}
+.nav-tab{padding:13px 13px;font-size:.78rem;color:rgba(255,255,255,.5);border:none;background:none;border-bottom:3px solid transparent;transition:all .15s;white-space:nowrap}
+.nav-tab:hover{color:white}
+.nav-tab.active{color:white;border-bottom-color:#a78bfa}
+.spacer{flex:1}
+.cur-person{font-size:.72rem;color:rgba(255,255,255,.35);padding:0 10px}
+.screen{display:none;padding:20px;max-width:980px;margin:0 auto}
+.screen.active{display:block}
+.person-bar{display:flex;gap:10px;margin-bottom:20px}
+.person-btn{display:flex;align-items:center;gap:9px;padding:10px 18px;border-radius:30px;border:2px solid #e0e0e0;background:white;font-size:.82rem;font-weight:700;color:#666;cursor:pointer;transition:all .15s}
+.person-btn:hover{border-color:#7c3aed}
+.person-btn.active{background:#7c3aed;color:white;border-color:#7c3aed}
+.av{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:800;color:white;flex-shrink:0}
+.card{background:white;border-radius:14px;padding:20px;margin-bottom:14px;box-shadow:0 1px 6px rgba(0,0,0,.07)}
+.card-title{font-size:.82rem;font-weight:800;margin-bottom:14px;display:flex;align-items:center;gap:7px;color:#374151}
+.btn{padding:7px 14px;border-radius:9px;border:none;font-size:.77rem;font-weight:700;cursor:pointer;transition:all .15s}
+.btn-purple{background:#7c3aed;color:white}.btn-purple:hover{background:#6d28d9}
+.btn-outline{background:white;border:1.5px solid #ddd;color:#555}.btn-outline:hover{border-color:#7c3aed;color:#7c3aed}
+.btn-ghost{background:none;border:none;color:#bbb;padding:3px 7px;font-size:.8rem;cursor:pointer}.btn-ghost:hover{color:#ef233c}
+.btn-green{background:#059669;color:white}.btn-green:hover{background:#047857}
+.btn-sm{padding:5px 11px;font-size:.72rem}
+.inp{width:100%;padding:8px 11px;border:1.5px solid #e0e0e0;border-radius:9px;font-size:.81rem;outline:none;background:white;color:#1a1a2e}
+.inp:focus{border-color:#7c3aed}
+textarea.inp{resize:vertical;min-height:75px;line-height:1.5}
+.lbl{font-size:.68rem;color:#999;font-weight:700;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px;margin-top:10px}
+.lbl:first-child{margin-top:0}
+.checkin-item{border-left:3px solid #e5e7eb;padding:0 0 20px 18px;position:relative;margin-left:10px}
+.checkin-item:last-child{border-left-color:transparent}
+.ci-dot{width:14px;height:14px;border-radius:50%;background:#7c3aed;position:absolute;left:-8.5px;top:2px;border:2px solid white;box-shadow:0 0 0 2px #7c3aed}
+.ci-date{font-size:.72rem;font-weight:800;color:#7c3aed;margin-bottom:6px}
+.ci-body{background:white;border-radius:11px;padding:14px;box-shadow:0 1px 5px rgba(0,0,0,.06)}
+.ci-section{margin-bottom:10px}
+.ci-section-title{font-size:.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:#9ca3af;margin-bottom:4px}
+.ci-text{font-size:.8rem;line-height:1.5;color:#374151}
+.ci-insight{background:#faf5ff;border-left:3px solid #7c3aed;padding:8px 11px;border-radius:0 8px 8px 0;font-size:.78rem;line-height:1.45;color:#4c1d95;margin-top:8px}
+.ci-ai-box{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:12px;margin-top:10px;font-size:.78rem;line-height:1.5;color:#064e3b}
+.ci-actions{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.skill-row{margin-bottom:9px}
+.skill-label{display:flex;justify-content:space-between;font-size:.74rem;margin-bottom:3px}
+.skill-label span:first-child{font-weight:600;color:#374151}
+.skill-label span:last-child{color:#7c3aed;font-weight:800}
+.skill-bar{height:6px;background:#ede9fe;border-radius:10px;overflow:hidden}
+.skill-fill{height:100%;background:linear-gradient(90deg,#7c3aed,#a78bfa);border-radius:10px;transition:width .6s}
+.trend-item{display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid #f3f4f6;font-size:.79rem}
+.trend-item:last-child{border-bottom:none}
+.trend-emoji{font-size:1rem;flex-shrink:0}
+.ai-loading{display:flex;align-items:center;gap:8px;padding:12px;background:#faf5ff;border-radius:10px;font-size:.78rem;color:#7c3aed}
+.spinner{width:16px;height:16px;border:2px solid #e9d5ff;border-top-color:#7c3aed;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.progress-wrap{height:5px;background:#ede9fe;border-radius:10px;overflow:hidden;margin-bottom:14px}
+.progress-fill{height:100%;background:linear-gradient(90deg,#7c3aed,#a78bfa);border-radius:10px;transition:width .5s}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:620px){.two-col{grid-template-columns:1fr}}
+.empty{text-align:center;padding:32px;color:#bbb;font-size:.82rem}
+.empty .ei{font-size:2rem;margin-bottom:7px}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">🧭 Check-in Manager</div>
+  <button class="nav-tab active" onclick="showScreen('overview',this)">📊 Преглед</button>
+  <button class="nav-tab" onclick="showScreen('history',this)">📅 История</button>
+  <button class="nav-tab" onclick="showScreen('new-checkin',this)">➕ Нов чек-ин</button>
+  <button class="nav-tab" onclick="showScreen('development',this)">🌱 Развитие</button>
+  <div class="spacer"></div>
+  <div class="cur-person" id="cur-person-label"></div>
+</nav>
+
+<!-- OVERVIEW -->
+<div id="overview" class="screen active">
+  <div class="person-bar" id="pb-overview"></div>
+  <div class="two-col">
+    <div>
+      <div class="card"><div class="card-title">🎯 Фокус за развитие</div><div id="ov-focus"></div></div>
+      <div class="card"><div class="card-title">📈 Умения и прогрес</div><div id="ov-skills"></div></div>
+    </div>
+    <div>
+      <div class="card"><div class="card-title">💡 Повтарящи се теми</div><div id="ov-trends"></div></div>
+      <div class="card"><div class="card-title">⏭ Предложения за следващ чек-ин</div><div id="ov-next"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- HISTORY -->
+<div id="history" class="screen">
+  <div class="person-bar" id="pb-history"></div>
+  <div id="history-list"></div>
+</div>
+
+<!-- NEW CHECKIN -->
+<div id="new-checkin" class="screen">
+  <div class="person-bar" id="pb-new"></div>
+  <div class="card">
+    <div class="card-title">➕ Нов чек-ин</div>
+    <div class="lbl">Дата</div>
+    <input type="date" class="inp" id="nc-date" style="max-width:200px">
+    <div class="lbl" style="margin-top:12px">✨ На какво е доволна / изкефена?</div>
+    <textarea class="inp" id="nc-wins" placeholder="Постигнати резултати, нови идеи, моменти на гордост..."></textarea>
+    <div class="lbl">⚡ Какво я човърка / притеснява?</div>
+    <textarea class="inp" id="nc-worries" placeholder="Предизвикателства, блокажи, несигурности..."></textarea>
+    <div class="lbl">💬 Теми за обсъждане</div>
+    <textarea class="inp" id="nc-topics" placeholder="Проекти, цели, нужда от съдействие..."></textarea>
+    <div class="lbl">✅ Последващи задачи (ДАЛ)</div>
+    <textarea class="inp" id="nc-dal" placeholder="Конкретни задачи след срещата..."></textarea>
+    <div class="lbl">📝 Твои бележки / инсайти като мениджър</div>
+    <textarea class="inp" id="nc-notes" placeholder="Какво забеляза? Какво те е впечатлило или притеснило?"></textarea>
+    <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
+      <button class="btn btn-green" onclick="saveAndAnalyze()">🤖 Запази и анализирай с AI</button>
+      <button class="btn btn-outline" onclick="saveCheckin()">💾 Само запази</button>
+    </div>
+    <div id="nc-ai-result" style="margin-top:14px"></div>
+  </div>
+</div>
+
+<!-- DEVELOPMENT -->
+<div id="development" class="screen">
+  <div class="person-bar" id="pb-dev"></div>
+  <div class="two-col">
+    <div class="card"><div class="card-title">🎯 Цели за развитие (PD Goals)</div><div id="dev-goals"></div></div>
+    <div class="card"><div class="card-title">🏆 OKRs — прогрес</div><div id="dev-okrs"></div></div>
+  </div>
+  <div class="card">
+    <div class="card-title">🔄 Модел на автономност</div>
+    <p style="font-size:.78rem;color:#666;margin-bottom:14px">Проследяване на развитието от изпълнение → стратегическо мислене</p>
+    <div id="dev-autonomy"></div>
+  </div>
+  <div class="card" style="margin-top:0">
+    <div class="card-title">📌 Банка с въпроси за развитие</div>
+    <p style="font-size:.78rem;color:#666;margin-bottom:12px">Въпроси за стратегическо водене в чек-ините</p>
+    <div id="dev-questions"></div>
+  </div>
+</div>
+
+<script>
+// ── PROFILES ──────────────────────────────────────────────────────────────────
+const PROFILES = {
+  gergana: {
+    key: 'gergana',
+    name: 'Гергана',
+    role: 'Специалист обучения',
+    color: '#f59e0b',
+    initial: 'Г',
+    pdGoals:[
+      {name:'Качество на обученията', note:'Дабълчек на съдържание, ОВ от обучители, подобрена комуникация'},
+      {name:'Приоритизиране на задачи', note:'Работи с матрица, Тоника помага; все още предизвикателство'},
+      {name:'Стратегическо мислене за продукта', note:'Анализ на пазар, разбиране на нуждите на директорите'},
+      {name:'Управление на времето', note:'Идентифицирано като блокаж; работи по него'},
+    ],
+    okrs:[
+      {name:'Продажба на 75 обучения', progress:55, note:'Анализ на откази, рисърч на конкуренти'},
+      {name:'Webinar 9000', progress:40, note:'Консистентни имейли, конкретни заглавия'},
+      {name:'Open training 8000', progress:45, note:'Оптимизиран процес, подкрепа за обучители'},
+      {name:'Time & work management', progress:30, note:'Анализ на зони за оптимизация'},
+    ],
+    skills:[
+      {name:'Управление на обучители', val:65},
+      {name:'Качество на съдържанието', val:70},
+      {name:'Приоритизиране', val:45},
+      {name:'Стратегически анализ', val:40},
+      {name:'Автономност в решенията', val:55},
+    ],
+    trends:[
+      {e:'🔄', t:'Управление на времето и приоритизирането', note:'Повтаря се от октомври насам'},
+      {e:'📹', t:'Заснемане на видеа — блокирано', note:'Ангажираност на обучители, процес с Фил'},
+      {e:'💬', t:'Комуникация с обучители', note:'Насоки, слайдове, очаквания — ongoing'},
+      {e:'📊', t:'Анализ на данни за обучения и уебинари', note:'Посещаемост, теми, директори'},
+      {e:'🎯', t:'Юзър експириънс за директори', note:'Идея, която се развива'},
+    ],
+    nextQuestions:[
+      'Кои 3 решения взе тази седмица сама, без да питаш? Как се чувства с тях?',
+      'Ако трябваше да обясниш защо нещо не върви — как би го рамкирала стратегически?',
+      'Кой процес, ако оптимизираш, ще има най-голям ефект върху резултатите?',
+      'Как изглежда идеалното обучение от гледна точка на директора?',
+      'Какво си научила от последните данни за уебинари и какво би направила различно?',
+      'Кога последно делегира нещо? Как мина?',
+    ],
+    autonomyLevel: 3,
+    checkins: []
+  },
+  evgenia: {
+    key: 'evgenia',
+    name: 'Евгения',
+    role: 'Координатор проекти + AI',
+    color: '#3b82f6',
+    initial: 'Е',
+    pdGoals:[
+      {name:'Комуникационни умения', note:'Amplifier programme, external content, audience-specific messaging'},
+      {name:'AI умения в образованието', note:'Weekly AI experiments, AI Club, external trainings'},
+      {name:'Стратегическо проектно управление', note:'Owning projects end-to-end, process improvements'},
+      {name:'Content creation', note:'Global Lessons series, FB group growth, YouTube channel'},
+    ],
+    okrs:[
+      {name:'AI Leadership — FB group 14.2K → 20K', progress:85, note:'12K+ достигнати към ноември 2025'},
+      {name:'AI implementations (28 unique)', progress:50, note:'В процес'},
+      {name:'EdTech Network (3 partnerships)', progress:30, note:'Разговори текат'},
+      {name:'Global Lessons (5 interviews)', progress:40, note:'Alfie Kohn responded'},
+    ],
+    skills:[
+      {name:'Проектна координация', val:75},
+      {name:'AI съдържание и общност', val:80},
+      {name:'Стратегическо планиране', val:55},
+      {name:'Комуникация с партньори', val:65},
+      {name:'Автономност в решенията', val:70},
+    ],
+    trends:[
+      {e:'🤖', t:'AI съдържание и общност', note:'FB group расте от 5.8K → 12K+; YouTube блокиран'},
+      {e:'📋', t:'Множество едновременни проекти', note:'Yettel, VISA, TFCN, GLAS, AI'},
+      {e:'🎥', t:'Видео производство', note:'Блокирано — нужен човек за записи по сценарии'},
+      {e:'🌍', t:'Партньорства и мрежи', note:'Teach for All, AMIC, EdTech organizations'},
+      {e:'📈', t:'Erasmus+ и финансиране', note:'Повтарящ се worry/frustration'},
+    ],
+    nextQuestions:[
+      'Кой проект в момента те учи най-много? Как го документираш?',
+      'Ако трябваше да спреш един проект, кой би бил и защо?',
+      'Как подхождаш към ситуации, в които нямаш опит? Дай конкретен пример.',
+      'Какво би предложила като подобрение в нашия начин на работа?',
+      'Как изглежда за теб успехът на AI инициативата след 6 месеца?',
+      'Кои 2 умения биха те направили значително по-ефективна в ролята?',
+    ],
+    autonomyLevel: 4,
+    checkins: []
+  }
+};
+
+const PERSON_KEYS = ['gergana', 'evgenia'];
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let data = {};
+let curKey = 'gergana';
+
+function loadData() {
+  try {
+    const saved = localStorage.getItem('checkin_v4');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      PERSON_KEYS.forEach(k => {
+        data[k] = {...PROFILES[k], ...(parsed[k]||{})};
+      });
+    } else {
+      PERSON_KEYS.forEach(k => { data[k] = JSON.parse(JSON.stringify(PROFILES[k])); });
+    }
+  } catch(e) {
+    PERSON_KEYS.forEach(k => { data[k] = JSON.parse(JSON.stringify(PROFILES[k])); });
+  }
+}
+function saveData() {
+  try { localStorage.setItem('checkin_v4', JSON.stringify(data)); } catch(e) {}
+}
+loadData();
+
+function p() { return data[curKey]; }
+
+// ── PERSON BARS ───────────────────────────────────────────────────────────────
+function buildPersonBars() {
+  ['pb-overview','pb-history','pb-new','pb-dev'].forEach(id => {
+    const el = document.getElementById(id);
+    el.innerHTML = PERSON_KEYS.map(k => {
+      const pr = PROFILES[k];
+      const active = k === curKey ? ' active' : '';
+      return `<button class="person-btn${active}" onclick="switchPerson('${k}')">
+        <div class="av" style="background:${pr.color}">${pr.initial}</div>
+        ${pr.name} · ${pr.role}
+      </button>`;
+    }).join('');
+  });
+  document.getElementById('cur-person-label').textContent = p().name;
+}
+
+function switchPerson(key) {
+  curKey = key;
+  buildPersonBars();
+  renderAll();
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+function renderAll() {
+  renderOverview();
+  renderHistory();
+  renderDevelopment();
+  document.getElementById('nc-ai-result').innerHTML = '';
+  const d = document.getElementById('nc-date');
+  if (!d.value) d.value = new Date().toISOString().split('T')[0];
+}
+
+function renderOverview() {
+  const pr = p();
+  document.getElementById('ov-focus').innerHTML = pr.pdGoals.map(g=>`
+    <div style="padding:8px 0;border-bottom:1px solid #f3f4f6">
+      <div style="font-size:.8rem;font-weight:700;color:#374151;margin-bottom:2px">${g.name}</div>
+      <div style="font-size:.74rem;color:#6b7280">${g.note}</div>
+    </div>`).join('');
+
+  document.getElementById('ov-skills').innerHTML = pr.skills.map(s=>`
+    <div class="skill-row">
+      <div class="skill-label"><span>${s.name}</span><span>${s.val}%</span></div>
+      <div class="skill-bar"><div class="skill-fill" style="width:${s.val}%"></div></div>
+    </div>`).join('');
+
+  document.getElementById('ov-trends').innerHTML = pr.trends.map(t=>`
+    <div class="trend-item">
+      <span class="trend-emoji">${t.e}</span>
+      <div><div style="font-weight:700;font-size:.79rem">${t.t}</div>
+      <div style="font-size:.72rem;color:#9ca3af;margin-top:1px">${t.note}</div></div>
+    </div>`).join('');
+
+  document.getElementById('ov-next').innerHTML = pr.nextQuestions.slice(0,4).map((q,i)=>`
+    <div style="display:flex;gap:7px;padding:7px 0;border-bottom:1px solid #f9fafb;align-items:flex-start">
+      <span style="background:#ede9fe;color:#7c3aed;font-size:.65rem;font-weight:800;padding:2px 6px;border-radius:10px;margin-top:1px;flex-shrink:0">${i+1}</span>
+      <span style="font-size:.79rem;color:#374151;line-height:1.45">${q}</span>
+    </div>`).join('');
+}
+
+function renderHistory() {
+  const pr = p();
+  const list = document.getElementById('history-list');
+  if (!pr.checkins || pr.checkins.length === 0) {
+    list.innerHTML = `<div class="empty"><div class="ei">📅</div>Все още няма записани чек-ини за ${pr.name}.</div>`;
+    return;
+  }
+  const sorted = [...pr.checkins].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  list.innerHTML = '<div style="margin-left:10px">'+sorted.map(c=>{
+    const label = new Date(c.date).toLocaleDateString('bg-BG',{day:'numeric',month:'long',year:'numeric'});
+    return `<div class="checkin-item">
+      <div class="ci-dot"></div>
+      <div class="ci-date">${label}</div>
+      <div class="ci-body">
+        ${c.wins?`<div class="ci-section"><div class="ci-section-title">✨ Доволна от</div><div class="ci-text">${esc(c.wins)}</div></div>`:''}
+        ${c.worries?`<div class="ci-section"><div class="ci-section-title">⚡ Притеснява я</div><div class="ci-text">${esc(c.worries)}</div></div>`:''}
+        ${c.topics?`<div class="ci-section"><div class="ci-section-title">💬 Теми</div><div class="ci-text">${esc(c.topics)}</div></div>`:''}
+        ${c.dal?`<div class="ci-section"><div class="ci-section-title">✅ ДАЛ</div><div class="ci-text">${esc(c.dal)}</div></div>`:''}
+        ${c.notes?`<div class="ci-insight">📌 <strong>Мениджърска бележка:</strong> ${esc(c.notes)}</div>`:''}
+        ${c.aiAnalysis?`<div class="ci-ai-box">🤖 <strong>AI анализ:</strong><br>${esc(c.aiAnalysis)}</div>`:''}
+        <div class="ci-actions">
+          <button class="btn btn-outline btn-sm" onclick="analyzeExisting('${c.id}')">🤖 Анализирай</button>
+          <button class="btn btn-ghost btn-sm" onclick="deleteCheckin('${c.id}')">🗑 Изтрий</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('')+'</div>';
+}
+
+function renderDevelopment() {
+  const pr = p();
+  document.getElementById('dev-goals').innerHTML = pr.pdGoals.map((g,i)=>`
+    <div style="padding:9px 0;border-bottom:1px solid #f3f4f6">
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:3px">
+        <span style="background:#ede9fe;color:#7c3aed;font-size:.65rem;font-weight:800;padding:2px 7px;border-radius:10px">${i+1}</span>
+        <span style="font-weight:700;font-size:.8rem">${g.name}</span>
+      </div>
+      <div style="font-size:.73rem;color:#6b7280;padding-left:34px">${g.note}</div>
+    </div>`).join('');
+
+  document.getElementById('dev-okrs').innerHTML = pr.okrs.map(o=>`
+    <div style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;font-size:.78rem;margin-bottom:4px">
+        <span style="font-weight:700">${o.name}</span>
+        <span style="color:#7c3aed;font-weight:800">${o.progress}%</span>
+      </div>
+      <div class="progress-wrap" style="margin-bottom:4px"><div class="progress-fill" style="width:${o.progress}%"></div></div>
+      <div style="font-size:.7rem;color:#9ca3af">${o.note}</div>
+    </div>`).join('');
+
+  const LEVELS=[
+    {l:1,label:'Зависим',desc:'Чака инструкции, не взима решения сама'},
+    {l:2,label:'Следващ',desc:'Изпълнява задачи, задава много въпроси'},
+    {l:3,label:'Развиващ се',desc:'Самостоятелна в изпълнението, нужда от насока в приоритетите'},
+    {l:4,label:'Автономен',desc:'Самостоятелна в решенията, стратегически активна'},
+    {l:5,label:'Лидер',desc:'Инициира, менторства, мисли системно'},
+  ];
+  document.getElementById('dev-autonomy').innerHTML = LEVELS.map(lv=>{
+    const act = lv.l===pr.autonomyLevel;
+    return `<div style="display:flex;align-items:center;gap:10px;padding:8px 11px;border-radius:9px;margin-bottom:5px;background:${act?'#ede9fe':'#f9fafb'};border:1.5px solid ${act?'#7c3aed':'transparent'}">
+      <div style="width:28px;height:28px;border-radius:50%;background:${act?'#7c3aed':'#e5e7eb'};color:${act?'white':'#9ca3af'};font-size:.75rem;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">${lv.l}</div>
+      <div>
+        <div style="font-size:.78rem;font-weight:${act?'800':'600'};color:${act?'#4c1d95':'#6b7280'}">${lv.label}</div>
+        <div style="font-size:.71rem;color:${act?'#6d28d9':'#9ca3af'}">${lv.desc}</div>
+      </div>
+      ${act?'<span style="margin-left:auto;font-size:.7rem;background:#7c3aed;color:white;padding:2px 8px;border-radius:10px;font-weight:700">Сега</span>':''}
+    </div>`;
+  }).join('')+`<div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">
+    ${[1,2,3,4,5].map(l=>`<button class="btn btn-outline btn-sm" onclick="setAutonomy(${l})">Ниво ${l}</button>`).join('')}
+  </div>`;
+
+  document.getElementById('dev-questions').innerHTML = pr.nextQuestions.map((q,i)=>`
+    <div style="display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid #f3f4f6">
+      <span style="background:#ede9fe;color:#7c3aed;font-size:.63rem;font-weight:800;padding:2px 6px;border-radius:8px;margin-top:1px;flex-shrink:0">${i+1}</span>
+      <span style="font-size:.78rem;color:#374151;line-height:1.5;flex:1">${q}</span>
+      <button class="btn-ghost" onclick="removeQ(${i})">✕</button>
+    </div>`).join('')+`
+    <div style="display:flex;gap:7px;margin-top:10px">
+      <input class="inp" id="new-q" placeholder="Добави въпрос..." style="flex:1">
+      <button class="btn btn-purple btn-sm" onclick="addQ()">Добави</button>
+    </div>`;
+}
+
+function setAutonomy(l){p().autonomyLevel=l;saveData();renderDevelopment();}
+function removeQ(i){p().nextQuestions.splice(i,1);saveData();renderDevelopment();renderOverview();}
+function addQ(){
+  const inp=document.getElementById('new-q');
+  const v=inp.value.trim();if(!v)return;
+  p().nextQuestions.push(v);inp.value='';
+  saveData();renderDevelopment();renderOverview();
+}
+
+// ── CHECKIN ───────────────────────────────────────────────────────────────────
+function collectForm(){
+  const date=document.getElementById('nc-date').value;
+  if(!date){alert('Моля въведи дата');return null;}
+  return {
+    id:'ci_'+Date.now(), date,
+    wins:document.getElementById('nc-wins').value.trim(),
+    worries:document.getElementById('nc-worries').value.trim(),
+    topics:document.getElementById('nc-topics').value.trim(),
+    dal:document.getElementById('nc-dal').value.trim(),
+    notes:document.getElementById('nc-notes').value.trim(),
+    aiAnalysis:''
+  };
+}
+function clearForm(){
+  ['nc-wins','nc-worries','nc-topics','nc-dal','nc-notes'].forEach(id=>document.getElementById(id).value='');
+}
+function saveCheckin(){
+  const c=collectForm();if(!c)return;
+  p().checkins.push(c);saveData();clearForm();
+  showScreen('history',document.querySelectorAll('.nav-tab')[1]);
+  renderHistory();
+}
+async function saveAndAnalyze(){
+  const c=collectForm();if(!c)return;
+  p().checkins.push(c);saveData();
+  const res=document.getElementById('nc-ai-result');
+  res.innerHTML='<div class="ai-loading"><div class="spinner"></div>AI анализира чек-ина...</div>';
+  const analysis=await callAI(c);
+  c.aiAnalysis=analysis;saveData();
+  res.innerHTML=`<div class="ci-ai-box">🤖 <strong>AI анализ:</strong><br>${esc(analysis)}</div>
+    <div style="margin-top:8px"><button class="btn btn-purple btn-sm" onclick="showScreen('history',document.querySelectorAll('.nav-tab')[1]);renderHistory()">→ Виж в историята</button></div>`;
+}
+async function analyzeExisting(id){
+  const c=p().checkins.find(x=>x.id===id);if(!c)return;
+  const analysis=await callAI(c);
+  c.aiAnalysis=analysis;saveData();renderHistory();
+}
+function deleteCheckin(id){
+  if(!confirm('Изтрий чек-ина?'))return;
+  p().checkins=p().checkins.filter(c=>c.id!==id);
+  saveData();renderHistory();
+}
+
+// ── AI ────────────────────────────────────────────────────────────────────────
+async function callAI(checkin){
+  const pr=p();
+  const history=pr.checkins.slice(-5).map(c=>
+    `Дата: ${c.date}\nДоволна: ${c.wins||'—'}\nПритеснения: ${c.worries||'—'}\nТеми: ${c.topics||'—'}`
+  ).join('\n\n---\n\n');
+  const prompt=`Ти си AI асистент на мениджър, която иска да развива екипа си. Анализираш чек-ин с ${pr.name} (${pr.role}).
+
+ТЕКУЩ ЧЕК-ИН (${checkin.date}):
+Доволна от: ${checkin.wins||'—'}
+Притеснения: ${checkin.worries||'—'}
+Теми: ${checkin.topics||'—'}
+ДАЛ: ${checkin.dal||'—'}
+Мениджърска бележка: ${checkin.notes||'—'}
+
+ИСТОРИЯ: ${history||'Няма'}
+
+PD ЦЕЛИ: ${pr.pdGoals.map(g=>g.name).join(', ')}
+
+Дай кратък анализ (4-6 изречения) на: 1) Видим модел в развитието 2) Едно конкретно нещо за стратегическо развитие 3) Знак за растеж или риск. Пиши на български, кратко и практично.`;
+  try{
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})
+    });
+    const d=await resp.json();
+    return d.content?.[0]?.text||'Анализът не успя.';
+  }catch(e){return 'Грешка при свързване с AI.';}
+}
+
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\n/g,'<br>');}
+
+function showScreen(id,btn){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if(btn)btn.classList.add('active');
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+document.getElementById('nc-date').value=new Date().toISOString().split('T')[0];
+buildPersonBars();
+renderAll();
+</script>
+</body>
+</html>
